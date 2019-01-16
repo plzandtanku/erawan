@@ -1,0 +1,34 @@
+RUN useradd -m -s /bin/bash hadoop
+WORKDIR /home/hadoop
+RUN wget https://archive.apache.org/dist/hadoop/core/hadoop-3.1.0/hadoop-3.1.0.tar.gz -P .
+RUN wget https://archive.apache.org/dist/spark/spark-2.3.0/spark-2.3.0-bin-without-hadoop.tgz -P . --ca-certificate=file
+
+RUN tar -zxf hadoop-3.1.0.tar.gz
+RUN mv hadoop-3.1.0 hadoop
+RUN tar -zxf spark-2.3.0-*.tgz
+RUN rm *.tgz
+RUN mv spark-2.3.0-* spark
+RUN chown hadoop spark -R
+
+RUN mkdir /home/hadoop/.ssh
+RUN echo PubkeyAcceptedKeyTypes +ssh-dss >> /home/hadoop/.ssh/config
+RUN echo PasswordAuthentication no >> /home/hadoop/.ssh/config
+
+COPY config/id_rsa.pub /home/hadoop/.ssh/id_rsa.pub
+COPY config/id_rsa /home/hadoop/.ssh/id_rsa
+RUN cat /home/hadoop/.ssh/id_rsa.pub >> /home/hadoop/.ssh/authorized_keys
+RUN chown hadoop .ssh -R
+RUN chmod 0600 /home/hadoop/.ssh/id_rsa
+RUN chmod 0600 /home/hadoop/.ssh/authorized_keys
+
+RUN echo PATH=/home/hadoop/hadoop/bin:/home/hadoop/hadoop/sbin:$PATH >> /home/hadoop/.profile
+RUN echo PATH=/home/hadoop/hadoop/bin:/home/hadoop/hadoop/sbin:$PATH >> /home/hadoop/.bashrc
+RUN mkdir -p /home/hadoop/data/nameNode /home/hadoop/data/dataNode /home/hadoop/data/namesecondary /home/hadoop/data/tmp
+RUN chown hadoop /home/hadoop/data/nameNode /home/hadoop/data/dataNode /home/hadoop/data/namesecondary /home/hadoop/data/tmp /home/hadoop/spark
+RUN echo HADOOP_HOME=/home/hadoop/hadoop >> /home/hadoop/.bashrc
+RUN chown hadoop /home/hadoop/.profile /home/hadoop/.bashrc
+RUN echo JAVA_HOME=/docker-java-home >> /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+RUN echo HDFS_NAMENODE_USER=hadoop >> /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+RUN echo HDFS_DATANODE_USER=hadoop >> /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh                        
+RUN echo HDFS_SECONDARYNAMENODE_USER=hadoop >> /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+RUN ln -s /usr/bin/java /bin/java

@@ -1,0 +1,13 @@
+FROM openjdk:8
+USER root
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends openssh-server vim wget ca-certificates
+RUN echo PubkeyAuthentication yes >> /etc/ssh/ssh_config
+RUN echo Host * >> /etc/ssh/ssh_config
+RUN service ssh start
+CMD service ssh start && bash
+EXPOSE 22/tcp
+EXPOSE 22/udp
+
+
